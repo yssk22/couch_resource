@@ -25,10 +25,9 @@ Rake::RDocTask.new do |rdoc|
 end
 
 require 'rake/testtask'
-Rake::TestTask.new(:test) do |test|
-  test.libs << 'lib' << 'test'
-  test.pattern = 'test/**/*_test.rb'
-  test.verbose = false
+Rake::TestTask.new(:test) do |t|
+  t.test_files = FileList["test/test_*.rb"]
+  t.verbose = true
 end
 
 begin
