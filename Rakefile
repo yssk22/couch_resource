@@ -4,12 +4,12 @@ require 'rake'
 begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
-    gem.name = "couch_resource"
-    gem.summary = %Q{TODO}
-    gem.email = "yssk22@gmail.com"
+    gem.name     = "couch_resource"
+    gem.summary  = "ActiveRecord style data mapper for CouchDB"
+    gem.email    = "yssk22@gmail.com"
     gem.homepage = "http://github.com/yssk22/couch_resource"
-    gem.authors = ["Yohei Sasaki"]
-    # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
+    gem.authors  = ["Yohei Sasaki"]
+    gem.files    = FileList["MIT_LICENSE", "lib/**/*.rb", "test/**/*.rb"]
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
@@ -34,7 +34,7 @@ begin
   require 'rcov/rcovtask'
   Rcov::RcovTask.new do |test|
     test.libs << 'test'
-    test.pattern = 'test/**/*_test.rb'
+    test.pattern = 'test/test_*.rb'
     test.verbose = true
   end
 rescue LoadError
