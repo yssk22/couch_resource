@@ -1,0 +1,7 @@
+= couch_resource
+
+Description goes here.
+
+== Copyright
+
+Copyright (c) 2009 Yohei Sasaki. See LICENSE for details.
