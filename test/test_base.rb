@@ -39,6 +39,14 @@ class MagicAttributesTest < CouchResource::Base
   datetime :updated_on
 end
 
+class DatabaseNameTest < CouchResource::Base
+end
+
+module Nested
+  class DatabaseNameTest < CouchResource::Base
+  end
+end
+
 class TestBase < Test::Unit::TestCase
   def setup
     res = SimpleDocument.connection.put(SimpleDocument.database.path)
@@ -365,20 +373,25 @@ class TestBase < Test::Unit::TestCase
     assert_equal 0, docs[:rows].length
   end
 
+  def test_database_name
+    assert_equal "http://localhost:5984/database_name_tests",        DatabaseNameTest.database.to_s
+    assert_equal "http://localhost:5984/nested_database_name_tests", Nested::DatabaseNameTest.database.to_s
+  end
+
+  def test_magic_attributes
+    obj = MagicAttributesTest.new
+    obj.save
+    assert_not_nil obj.created_at
+    assert_not_nil obj.created_on
+    assert_not_nil obj.updated_at
+    assert_not_nil obj.updated_on
+  end
+
   private
   def register_simple_documents
     0.upto(9) do |i|
       doc = SimpleDocument.new(:title => "title_#{i}", :content => "content_#{i}")
       doc.save
     end
-  end
-
-  def test_magic_attributes
-    obj = MagicAttributesTest
-    obj.save
-    assert_not_nil obj.created_at
-    assert_not_nil obj.created_on
-    assert_not_nil obj.updated_at
-    assert_not_nil obj.updated_on
   end
 end

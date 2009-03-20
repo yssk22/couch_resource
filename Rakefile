@@ -43,5 +43,18 @@ rescue LoadError
   end
 end
 
-
 task :default => :test
+
+Rake::RDocTask.new(:sitedoc) do |rdoc|
+  rdoc.rdoc_dir    = 'sitedoc'
+  rdoc.title       = "CouchResource API Reference"
+  rdoc.options << '--line-numbers' << '--inline-source'
+  rdoc.rdoc_files.include('lib/**/*.rb')
+  rdoc.template = "jamis"
+end
+
+namespace :sitedoc do
+  task :update => :sitedoc do
+    sh "rsync -avze ssh sitedoc/ www:~/sitedoc/couch_resource"
+  end
+end

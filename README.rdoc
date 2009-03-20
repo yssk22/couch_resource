@@ -1,7 +1,76 @@
-= couch_resource
+= What is CouchResource ?
 
-Description goes here.
+CouchResource is an ActiveRecord-style data mapper for CouchDB.
+You can develop model classes baed on the ActiveRecord way.
+
+== Install
+
+You can install from github,
+
+  gem source -a http://github.com
+  sudo gem install yssk22-couch_resource
+
+And official gem packages is also available in {WebJourney Project @RubyForge}[http://rubyforge.org/projects/webjourney/]
+
+== Supported CouchDB
+
+version 0.9.0-incubating (currently installed from svn trunk).
+
+== Example
+
+A example for insert/update/delete documents,
+
+  class MyDocument < CouchResource::Base
+     string :title
+     string :content
+     array  :tags, :is_a => String
+  end
+
+  doc = MyDocument.new
+  doc.title   = "my document"
+  doc.content = "my content ..."
+  doc.tags    = ["web", "sample"]
+  doc.save
+  # => saved on http://localhost:5984/my_documents/
+  doc.id
+  # => "4da53a348b5616aa07f57274a58ca13f"  (automatically assiged by CouchDB)
+  doc = MyDocument.find("4da53a348b5616aa07f57274a58ca13f")
+  # => #<MyDocument:0x12d232c @id="4da53a348b5616aa07f57274a58ca13f", @rev="2480991755", @attributes={"title"=>"My document"}>
+  doc.destroy
+  # => deleted from http://localhost:5984/my_documents/4da53a348b5616aa07f57274a58ca13f
+
+Another example for MapReduce query
+
+  class MyDocument < CouchResource::Base
+     string :title
+     string :content
+     array  :tags, :is_a => String
+
+     # define finder method (find_by_{design_name}_{view_name}) using map/reduce scripts
+     view :tags, :count => {
+        :map    => include_js("path/to/map.js"),
+        :reduce => include_js("path/to/reduce.js")
+     }
+  end
+
+  MyDocument.find_tags_count("web")
+
+see more details (validation, paginaiton, fixtures, ... etc) at {API document site}[http://www.webjourney.org/doc/couch_resource/]
+
+== Application Practical Example
+
+WebJourney and it's blog component. Both of them are developed on http://github.com/yssk22/webjourney/tree/master
+
+== Bugs/Requests/Quesions and ...
+
+Let's collabolate {our project site}[http://www.webjourney.org/project/projects/show/couch-resource]
+or please fork the github repo at http://github.com/yssk22/couch_resource.
+
+== Altenertives
+
+CouchPotato : http://github.com/langalex/couch_potato/tree/master
+CouchRest   : http://github.com/jchris/couchrest/tree/master
 
 == Copyright
 
-Copyright (c) 2009 Yohei Sasaki. See LICENSE for details.
+Copyright (c) 2009 Yohei Sasaki. See MIT_LICENSE for details.

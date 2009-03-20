@@ -6,73 +6,47 @@ require File.join(File.dirname(__FILE__), 'connection')
 module CouchResource
   class Base
     cattr_accessor :logger, :instance_writer => false
+    @@logger = Logger.new("/dev/null")
     cattr_accessor :check_design_revision_every_time, :instance_writer => false
+    @@check_design_revision_every_time = true
 
     class << self
       # Get the URI of the CouchDB database to map for this class
       def database
-        if defined?(@database)
-          @database
-        elsif superclass != Object && superclass.database
-          superclass.database.dup.freeze
+        db = read_inheritable_attribute(:database)
+        if db
+          db
+        elsif superclass != CouchResource::Base && superclass.database
+          superclass.database
+        else
+          # convension
+          db = self.name.to_s.underscore.pluralize.gsub("/", "_")
+          URI.parse("http://localhost:5984/#{URI.decode(db)}")
         end
       end
 
       # Set the URI of the CouchDB database to map for this class
       def database=(uri)
-        @connection = nil
         if uri.nil?
-          @database = nil
+          write_inheritable_attribute(:database, nil)
         else
-          @database = uri.is_a?(URI) ? uri.dup : URI.parse(uri)
-          @user     = URI.decode(@database.user) if @database.user
-          @password = URI.decode(@database.password) if @database.password
+          db = uri.is_a?(URI) ? uri.dup : URI.parse(uri)
+          write_inheritable_attribute(:database, db)
+          db
         end
       end
       alias :set_database :database=
 
-      # Gets the user for REST HTTP authentication.
-      def user
-        # Not using superclass_delegating_reader. See +site+ for explanation
-        if defined?(@user)
-          @user
-        elsif superclass != Object && superclass.user
-          superclass.user.dup.freeze
-        end
-      end
-
-      # Sets the user for REST HTTP authentication.
-      def user=(user)
-        @connection = nil
-        @user = user
-      end
-
-      # Gets the password for REST HTTP authentication.
-      def password
-        # Not using superclass_delegating_reader. See +site+ for explanation
-        if defined?(@password)
-          @password
-        elsif superclass != Object && superclass.password
-          superclass.password.dup.freeze
-        end
-      end
-
-      # Sets the password for REST HTTP authentication.
-      def password=(password)
-        @connection = nil
-        @password = password
-      end
-
       # Sets the number of seconds after which requests to the REST API should time out.
       def timeout=(timeout)
-        @connection = nil
-        @timeout = timeout
+        write_inheritable_attribute(:timeout, timeout)
       end
 
       # Gets tthe number of seconds after which requests to the REST API should time out.
       def timeout
-        if defined?(@timeout)
-          @timeout
+        tm = read_inheritable_attribute(:timeout)
+        if tm
+          tm
         elsif superclass != Object && superclass.timeout
           superclass.timeout
         end
@@ -82,15 +56,16 @@ module CouchResource
       # The +refresh+ parameter toggles whether or not the connection is refreshed at every request
       # or not (defaults to <tt>false</tt>).
       def connection(reflesh = false)
-        if defined?(@connection) || superclass == Object
-          @connection = Connection.new(database) if reflesh || @connection.nil?
-          @connection.user = user if user
-          @connection.password = password if password
-          @connection.timeout = timeout if timeout
-          @connection
-        else
-          superclass.connection
+        conn = read_inheritable_attribute(:connection)
+        if reflesh || conn.nil?
+          db = database
+          conn          = Connection.new(db)
+          conn.user     = user     if db.user
+          conn.password = password if db.password
+          conn.timeout  = timeout  if timeout
+          write_inheritable_attribute(:connection, conn)
         end
+        conn
       end
 
       # Get the document path specified by the document id
