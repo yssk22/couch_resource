@@ -16,57 +16,183 @@ And official gem packages is also available in {WebJourney Project @RubyForge}[h
 
 version 0.9.0-incubating (currently installed from svn trunk).
 
-== Example
 
-A example for insert/update/delete documents,
+== Examples of ActiveRecord-like Features
+- Automapping CouchDB database
+
+CouchReSource model classes are automatically mapped to databases.
 
   class MyDocument < CouchResource::Base
-     string :title
-     string :content
-     array  :tags, :is_a => String
+  end
+  #=> mapped to http://localhost:5984/my_documents
+
+You can set the specific database uri with <tt>set_database</tt> method.
+
+  class MyDocument < CouhcResource::Base
+    set_database http://user:password@host:port/database1
+  end
+  #=> mapped to http://user:password@host:port/database1
+
+- Typed attributes
+
+CouchDB is schemaless so that you can set data attributes directly in your model code.
+
+  class MyDocument < CouhcResource::Base
+    string :title
+    string :content
+    array  :tags, :is_a => String
+  end
+  doc = MyDocument.new
+  doc.title   = "My document"
+  doc.content = "My content..."
+
+And you can use nested data structure using CouchResource::SubResource.
+
+  class Comment < CouchResource::SubResource
+    string :content
   end
 
+  class MyDocument < CouhcResource::Base
+    string :title
+    string :content
+    array  :tags,     :is_a => String
+    array  :comments, :is_a => Comment
+  end
   doc = MyDocument.new
-  doc.title   = "my document"
-  doc.content = "my content ..."
-  doc.tags    = ["web", "sample"]
-  doc.save
-  # => saved on http://localhost:5984/my_documents/
-  doc.id
-  # => "4da53a348b5616aa07f57274a58ca13f"  (automatically assiged by CouchDB)
-  doc = MyDocument.find("4da53a348b5616aa07f57274a58ca13f")
-  # => #<MyDocument:0x12d232c @id="4da53a348b5616aa07f57274a58ca13f", @rev="2480991755", @attributes={"title"=>"My document"}>
-  doc.destroy
-  # => deleted from http://localhost:5984/my_documents/4da53a348b5616aa07f57274a58ca13f
+  doc.comments = []
+  doc.comments << Comment.new(:content => "comment ... ")
 
-Another example for MapReduce query
+- Validation with typed attributes
+
+ActiveRecord-like validations are supported.
+
+  class MyDocument < CouhcResource::Base
+    string :title, :validates => [[:length_of, {:in => 1..64, :allow_nil => false}]]
+  end
+
+You can use validations indivisually out of attributes.
+
+  class MyDocument < CouhcResource::Base
+    string :title
+    validates_length_of :title, :in => 1..64, :allow_nil => false
+  end
+
+- Callbacks
+
+This feature is also the same as ActiveRecord.
+
+  class Person < CouchResource::Base
+    string :credit_card_id
+    def before_destroy # is called just before Person#destroy
+      CreditCard.find(credit_card_id).destroy
+    end
+  end
+
+- Direct manipulation
+
+  docId = "abcdefg"
+  MyDocument.find(docId)
+
+- Logging Support
+
+  CouchResource::Base.logger = Logger.new(STDOUT)
+  CouchResource::Base.logger = Log4r::Logger.new("Application Log")
+
+
+- Observers
+
+TBD, not implemented yet.
+
+- Inheritance hierarchies
+
+TBD, not implemented yet.
+
+- Transactions
+
+Not applicable for CouchDB.
+
+- Reflections on columns, associations, and aggregations
+
+Not applicable for CouchResource.
+
+== Examples of CouchDB Features
+
+- MapReduce finders
 
   class MyDocument < CouchResource::Base
-     string :title
-     string :content
-     array  :tags, :is_a => String
+    string :title
+    string :content
+    array  :tags, :is_a => String
 
-     # define finder method (find_by_{design_name}_{view_name}) using map/reduce scripts
-     view :tags, :count => {
-        :map    => include_js("path/to/map.js"),
-        :reduce => include_js("path/to/reduce.js")
-     }
+    # define finder method (find_by_{design_name}_{view_name}) using map/reduce scripts
+    view :tags, :count => {
+       :map    => include_js("path/to/map.js"),
+       :reduce => include_js("path/to/reduce.js")
+    }
   end
 
   MyDocument.find_tags_count("web")
 
-see more details (validation, paginaiton, fixtures, ... etc) at {API document site}[http://www.webjourney.org/doc/couch_resource/]
+== Rails Support
 
-== Application Practical Example
+To enable rails utilities in CouchResource, you may need to add the following sentences in your config/environment.rb.
+
+  require 'couch_resource'
+  require 'couch_resource/rails'
+
+- CouchConfig
+
+You can define multipe CouchDB sites in config/couchdb.yml and use the configurations in your CouchResource models.
+
+  development:
+    user_profiles:
+      host: localhost
+      port: 5984
+      database: user_profiles_development
+    pages:
+      host: localhost
+      port: 5984
+      database: pages_development
+    feeds:
+      host: localhost
+      port: 5984
+      database: feeds_development
+
+  class Page < CouchResource::Base
+    set_database CouchConfig.database_uri_for(:db => :wj_pages)
+  end
+
+- CouchFixture
+
+Add followings in your test/test_helper.rb.
+
+  class Test::Unit::TestCase
+    #  ... (snip) ...
+
+    # Add more helper methods to be used by all tests here...
+    setup :setup_couch_fixture
+    def setup_couch_fixture
+      CouchFixture.load
+    end
+  end
+
+Then You can define fixtures in test/fixtures/couchdb/{model_name}.yml
+
+
+== Other information
+
+=== Application Practical Example
 
 WebJourney and it's blog component. Both of them are developed on http://github.com/yssk22/webjourney/tree/master
 
-== Bugs/Requests/Quesions and ...
+=== Bugs/Requests/Quesions and ...
 
 Let's collabolate {our project site}[http://www.webjourney.org/project/projects/show/couch-resource]
 or please fork the github repo at http://github.com/yssk22/couch_resource.
 
-== Altenertives
+=== Altenertives
+
+There are some useful alternatves for CouchDB mapper in Ruby environment.
 
 CouchPotato : http://github.com/langalex/couch_potato/tree/master
 CouchRest   : http://github.com/jchris/couchrest/tree/master

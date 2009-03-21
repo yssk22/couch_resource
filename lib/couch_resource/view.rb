@@ -3,13 +3,6 @@ require 'rubygems'
 require 'active_support'
 require 'json'
 
-#
-# == Synchronization of design documents
-#
-# Synchronization mechanism of design documents is controlled by <tt>check_design_revision_every_time</tt>.
-# The value is true, the finder methods of views always check the revision of the design document.
-# When false, the finder methods only check at first time.
-#
 module CouchResource
   module View
     def self.included(base)

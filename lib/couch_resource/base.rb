@@ -3,6 +3,9 @@ require 'json'
 require File.join(File.dirname(__FILE__), 'error')
 require File.join(File.dirname(__FILE__), 'connection')
 
+#
+# CouchResource is an ActiveRecord-style data mapper for CouchDB.
+#
 module CouchResource
   class Base
     cattr_accessor :logger, :instance_writer => false
