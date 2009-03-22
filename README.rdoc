@@ -133,6 +133,23 @@ Not applicable for CouchResource.
 
   MyDocument.find_tags_count("web")
 
+- Pagination in finders
+
+  class MyDocument < CouchResource::Base
+    string :title
+    string :content
+    array  :tags, :is_a => String
+  end
+
+  docs = MyDocument.find(:all, :count => 3)
+  # => first 3 documents in docs[:rows]
+  docs = MyDocument.find(docs[:next])
+  # => next 3 documents in docs[:rows] (*1)
+  docs = MyDocument.find(docs[:next])
+  # => next more 3 documents in docs[:rows]
+  docs = MyDocument.find(docs[:previous])
+  # => backward 3 documents in docs[:rows] (the same as *1)
+
 == Rails Support
 
 To enable rails utilities in CouchResource, you may need to add the following sentences in your config/environment.rb.
