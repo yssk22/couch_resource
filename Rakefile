@@ -11,7 +11,7 @@ begin
     gem.authors  = ["Yohei Sasaki"]
     gem.files    = FileList["MIT_LICENSE", "lib/**/*.rb", "test/**/*.rb"]
     gem.add_dependency("json", "= 1.1.3")
-    gem.add_dependency("active_support", "= 2.2.2")
+    gem.add_dependency("activesupport", "= 2.2.2")
   end
 rescue LoadError
   puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
